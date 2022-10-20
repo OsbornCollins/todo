@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq"
+	"todo.osborncollins.net/internal/data"
 )
 
 // The Application Version Number
@@ -39,7 +42,7 @@ func main() {
 
 	// Read in flags that are needed to populate our config
 	flag.IntVar(&cfg.port, "port", 4000, "API Server Port") // When using a struct we must use IntVar
-	flag.StringVar(&cfg.env, "env", "development", "Enviorment ( Development | Staging | Production )")
+	flag.StringVar(&cfg.env, "env", "development", "Environment( Development | Staging | Production )")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("TODO_DB_DSN"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
