@@ -47,32 +47,32 @@ func (app *application) createTODOItemHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Create a school
-	err = app.models.Schools.Insert(school)
+	// Create a Todo Object
+	err = app.models.Todos.Insert(todo)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 
-	// Create a location header for the newly created resource/School
+	// Create a location header for the newly created resource/Todo object
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("/v1/schools/%d", school.ID))
+	headers.Set("Location", fmt.Sprintf("/v1/todoitems/%d", todo.ID))
 	// Write the JSON response with 201 - created status code with the body
-	// being the actual school data and the header being the headers map
-	err = app.writeJSON(w, http.StatusCreated, envelope{"school": school}, headers)
+	// being the actual todo data and the header being the headers map
+	err = app.writeJSON(w, http.StatusCreated, envelope{"todo": todo}, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
-// showSchoolHandler for the "GET" /v1/schools/:id" endpoint
-func (app *application) showSchoolHandler(w http.ResponseWriter, r *http.Request) {
+// showTODOItemHandlerfor the "GET" /v1/todoitems/:id" endpoint
+func (app *application) showTODOItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
-	// Fetch the specific school
-	school, err := app.models.Schools.Get(id)
+	// Fetch the specific todo item
+	todo, err := app.models.Todos.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -83,22 +83,22 @@ func (app *application) showSchoolHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	// Write the response by Get()
-	err = app.writeJSON(w, http.StatusOK, envelope{"school": school}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"todo": todo}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
-func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) updateTODOItemHandler(w http.ResponseWriter, r *http.Request) {
 	// This method does a partial replacement
-	// Get the id for the school that needs updating
+	// Get the id for the todo item that needs updating
 	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 	// Fetch the original record from the database
-	school, err := app.models.Schools.Get(id)
+	todo, err := app.models.Todos.Get(id)
 	// Error handling
 	if err != nil {
 		switch {
@@ -114,14 +114,12 @@ func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Reque
 	// default value of nil false
 	// if a field remains nil then we know that the client did not update it
 	var input struct {
-		Name    *string  `json:"name"`
-		Level   *string  `json:"level"`
-		Contact *string  `json:"contact"`
-		Phone   *string  `json:"phone"`
-		Email   *string  `json:"email"`
-		Website *string  `json:"website"`
-		Address *string  `json:"address"`
-		Mode    []string `json:"mode"`
+		Task_Name   *string  `json:"task_name"`
+		Description *string  `json:"description"`
+		Notes       *string  `json:"notes"`
+		Category    *string  `json:"category"`
+		Priority    *string  `json:"priority"`
+		Status      []string `json:"status"`
 	}
 
 	//Initalize a new json.Decoder instance
@@ -131,43 +129,37 @@ func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// Check for updates
-	if input.Name != nil {
-		school.Name = *input.Name
+	if input.Task_Name != nil {
+		todo.Task_Name = *input.Task_Name
 	}
-	if input.Level != nil {
-		school.Level = *input.Level
+	if input.Description != nil {
+		todo.Description = *input.Description
 	}
-	if input.Contact != nil {
-		school.Contact = *input.Contact
+	if input.Notes != nil {
+		todo.Notes = *input.Notes
 	}
-	if input.Phone != nil {
-		school.Phone = *input.Phone
+	if input.Category != nil {
+		todo.Category = *input.Category
 	}
-	if input.Email != nil {
-		school.Email = *input.Email
+	if input.Priority != nil {
+		todo.Priority = *input.Priority
 	}
-	if input.Website != nil {
-		school.Website = *input.Website
-	}
-	if input.Address != nil {
-		school.Address = *input.Address
-	}
-	if input.Mode != nil {
-		school.Mode = input.Mode
+	if input.Status != nil {
+		todo.Status = input.Status
 	}
 
-	// Perform Validation on the updated school. If validation fails then
+	// Perform Validation on the updated todo item. If validation fails then
 	// we send a 422 - unprocessable entity response to the client
 	// initialize a new Validator instance
 	v := validator.New()
 
 	//Check the map to determine if there were any validation errors
-	if data.ValidateSchool(v, school); !v.Valid() {
+	if data.ValidateTodo(v, todo); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	// Pass the update school record to the Update() method
-	err = app.models.Schools.Update(school)
+	// Pass the update todo record to the Update() method
+	err = app.models.Todos.Update(todo)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
@@ -177,22 +169,23 @@ func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-	err = app.writeJSON(w, http.StatusCreated, envelope{"school": school}, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{"todo": todo}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 
 }
 
-func (app *application) deleteSchoolHandler(w http.ResponseWriter, r *http.Request) {
+// The deleteTODOItemHandler() allows the user to delete a todo item from the databse by using the ID
+func (app *application) deleteTODOItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
-	// Delete the School from the database. Send a 404 Not Found status code to the
+	// Delete the todo item from the database. Send a 404 Not Found status code to the
 	// client if there is no matching record
-	err = app.models.Schools.Delete(id)
+	err = app.models.Todos.Delete(id)
 	// Error handling
 	if err != nil {
 		switch {
@@ -204,20 +197,20 @@ func (app *application) deleteSchoolHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// Return 200 Status OK to the client with a success message
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "school successfully deleted"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "todo item successfully deleted"}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
-// The listSchoolsHandler() allows the client to see a listing of schools
+// The listTODOItemsHandler() allows the client to see a listing of todo items
 // based on a set criteria
-func (app *application) listSchoolsHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) listTODOItemsHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an input struct to hold our query parameter
 	var input struct {
-		Name  string
-		Level string
-		Mode  []string
+		Task_Name string
+		Priority  string
+		Status    []string
 		data.Filters
 	}
 	// Initialize a validator
@@ -225,29 +218,29 @@ func (app *application) listSchoolsHandler(w http.ResponseWriter, r *http.Reques
 	// Get the URL values map
 	qs := r.URL.Query()
 	// use the helper methods to extract values
-	input.Name = app.readString(qs, "name", "")
-	input.Level = app.readString(qs, "level", "")
-	input.Mode = app.readCSV(qs, "mode", []string{})
+	input.Task_Name = app.readString(qs, "task_name", "")
+	input.Priority = app.readString(qs, "priority", "")
+	input.Status = app.readCSV(qs, "status", []string{})
 	// Get the page information using the read int method
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 	// Get the sort information
 	input.Filters.Sort = app.readString(qs, "sort", "id")
 	// Specify the allowed sort values
-	input.Filters.SortList = []string{"id", "name", "level", "-id", "-name", "-level"}
+	input.Filters.SortList = []string{"id", "task_name", "priority", "-id", "-task_name", "-priority"}
 	// Check for validation errors
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	// Get a listing of all schools
-	schools, metadata, err := app.models.Schools.GetAll(input.Name, input.Level, input.Mode, input.Filters)
+	// Get a listing of all todo items
+	todos, metadata, err := app.models.Todos.GetAll(input.Task_Name, input.Priority, input.Status, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	// Send a JSON response containing all the schools
-	err = app.writeJSON(w, http.StatusOK, envelope{"schools": schools, "metadata": metadata}, nil)
+	// Send a JSON response containing all the todo items
+	err = app.writeJSON(w, http.StatusOK, envelope{"todos": todos, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

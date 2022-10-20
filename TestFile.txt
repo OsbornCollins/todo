@@ -1,0 +1,19 @@
+
+curl -X POST -d "$BODY" localhost:4000/v1/todoitems/
+
+
+
+
+curl "localhost:4000/v1/schools?name=apple+tree&level=high+school&mode=online,face-to-face&page=1&page_size=7&sort=-name"
+curl -X PATCH -d '{"name": "test"}' localhost:4000/v1/schools/1
+curl -X PATCH -d '{"name": "test"}' localhost:4000/v1/schools/1
+Curl -X DELETE localhost:4000/v1/schools/1
+curl -i localhost:4000/v1/schools/1
+
+------WORKING------
+BODY='{"task_name":"Advance Web Quiz", "description":"Finish Advance Web Quiz 3 and have it submited", 
+"notes":"Youtube video Required", "category":"School", "priority":"High", "status":["pending","in-progress","completed"]}'
+
+---VALIDATION CHECK---
+BODY='{"task_name":"", "description":"", 
+"notes":"", "category":"", "priority":"", "status":[]}'

@@ -194,7 +194,7 @@ func (m TodoModel) Delete(id int64) error {
 func (m TodoModel) GetAll(task_name string, priority string, status []string, filters Filters) ([]*Todo, Metadata, error) {
 	// Construct the query
 	query := fmt.Sprintf(`
-		SELECT COUNT(*) OVER(), id, created_at, task_name, description, notes, category, priority, status, status, version
+		SELECT COUNT(*) OVER(), id, created_at, task_name, description, notes, category, priority, status, version
 		FROM todotbl
 		WHERE (to_tsvector('simple',task_name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 		AND (to_tsvector('simple',priority) @@ plainto_tsquery('simple', $2) OR $2 = '')
