@@ -84,7 +84,7 @@ func (m TodoModel) Get(id int64) (*Todo, error) {
 	}
 	// Create query
 	query := `
-		SELECT id, created_at, task_name, description, notes, category, priority, status, status, version
+		SELECT id, created_at, task_name, description, notes, category, priority, status, version
 		FROM todotbl
 		WHERE id = $1
 	`
