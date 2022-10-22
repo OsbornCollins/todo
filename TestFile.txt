@@ -4,7 +4,7 @@
 
 
 
-curl "localhost:4000/v1/todoitems?name=apple+tree&level=high+school&mode=online,face-to-face&page=1&page_size=7&sort=-name"
+
 
 
 
@@ -35,3 +35,6 @@ curl -X PATCH -d '{"task_name":"Workout"}' localhost:4000/v1/todoitems/2
 
 ---Delete---
 curl -X DELETE localhost:4000/v1/todoitems/3
+
+---FULL TEXT SEARCH (Including Sorting)---
+curl "localhost:4000/v1/todoitems?task_name=Advance&page=1&page_size=7&sort=-task_name"
